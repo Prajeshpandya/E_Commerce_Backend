@@ -5,13 +5,13 @@ export const newUser = async (req, res, next) => {
         const user = await User.create({
             name,
             _id,
-            dob,
+            dob: new Date(dob),
             email,
             gender,
             photo,
             role,
         });
-        return res.status(200).json({
+        return res.status(201).json({
             success: true,
             message: `Welcome ${user.name}`,
         });
