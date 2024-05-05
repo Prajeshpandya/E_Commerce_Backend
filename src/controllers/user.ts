@@ -13,7 +13,7 @@ export const newUser = async (
     const user = await User.create({
       name,
       _id,
-      dob:new Date(dob),
+      dob: new Date(dob),
       email,
       gender,
       photo,
@@ -25,9 +25,6 @@ export const newUser = async (
       message: `Welcome ${user.name}`,
     });
   } catch (error) {
-    res.status(400).json({
-        success: false,
-        message: error,
-      });
+    next(error);
   }
 };

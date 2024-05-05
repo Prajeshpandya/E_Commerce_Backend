@@ -3,6 +3,7 @@ import validator from "validator";
 const schema = new mongoose.Schema({
     _id: {
         type: String,
+        unique: [true, "User already Exist"],
         required: [true, "Please enter ID"],
     },
     name: {
