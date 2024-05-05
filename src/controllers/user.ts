@@ -24,5 +24,10 @@ export const newUser = async (
       success: true,
       message: `Welcome ${user.name}`,
     });
-  } catch (error) {}
+  } catch (error) {
+    res.status(400).json({
+        success: false,
+        message: error,
+      });
+  }
 };

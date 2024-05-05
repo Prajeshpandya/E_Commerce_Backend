@@ -16,5 +16,10 @@ export const newUser = async (req, res, next) => {
             message: `Welcome ${user.name}`,
         });
     }
-    catch (error) { }
+    catch (error) {
+        res.status(400).json({
+            success: false,
+            message: error,
+        });
+    }
 };
