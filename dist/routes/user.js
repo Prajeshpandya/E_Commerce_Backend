@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { newUser, getUser, getAllUsers } from "../controllers/user.js";
-const route = Router();
+import { newUser, getUser, getAllUsers, deleteUser, } from "../controllers/user.js";
+const router = Router();
 //route- /api/v1/user/...
-route.post("/new", newUser);
-route.get("/all", getAllUsers);
-route.get("/:id", getUser);
-export default route;
+router.post("/new", newUser);
+router.get("/all", getAllUsers);
+router.route("/:id").get(getUser).delete(deleteUser);
+export default router;
