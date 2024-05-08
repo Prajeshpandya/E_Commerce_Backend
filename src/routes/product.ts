@@ -5,6 +5,7 @@ import {
   newProduct,
   getAdminProducts,
   getSingleProduct,
+  updateProduct,
 } from "../controllers/product.js";
 import { singleUpload } from "../middlewares/multer.js";
 import { adminOnly } from "../middlewares/adminOnly.js";
@@ -17,6 +18,6 @@ router.post("/new", adminOnly, singleUpload, newProduct);
 router.get("/latest", getLatestProducts);
 router.get("/categories", getAllCategories);
 router.get("/admin-products", getAdminProducts);
-router.route("/:id").get(getSingleProduct).put(updateProduct);
+router.route("/:id").get(getSingleProduct).put(singleUpload,updateProduct);
 
 export default router;

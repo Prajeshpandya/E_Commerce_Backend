@@ -51,3 +51,30 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
         product,
     });
 });
+export const updateProduct = TryCatch(async (req, res, next) => {
+    //here change controller type req to any.. for pass id to string! or do directly bcz here not all field is required
+    const { id } = req.params;
+    const { name, price, stock, category } = req.body;
+    const photo = req.file;
+    const product = await Product.findById(id);
+    if (!product)
+        return next(new ErrorHandler("Product Not Found!", 404));
+    4;
+    if (photo) {
+        rm(product.photo, () => console.log("deleted old photo"));
+        product.photo = photo.path;
+    }
+    if (name)
+        product.name = name;
+    if (price)
+        product.price = price;
+    if (stock)
+        product.stock = stock;
+    if (category)
+        product.category = category;
+    await product.save();
+    return res.status(200).json({
+        success: "true",
+        message: "Product Updated successfully",
+    });
+});
