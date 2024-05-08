@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getLatestProducts, getAllCategories, newProduct, } from "../controllers/product.js";
+import { getLatestProducts, getAllCategories, newProduct, getAdminProducts, } from "../controllers/product.js";
 import { singleUpload } from "../middlewares/multer.js";
 import { adminOnly } from "../middlewares/adminOnly.js";
 const router = Router();
@@ -7,4 +7,5 @@ const router = Router();
 router.post("/new", adminOnly, singleUpload, newProduct);
 router.get("/latest", getLatestProducts);
 router.get("/categories", getAllCategories);
+router.get("/admin-products", getAdminProducts);
 export default router;
