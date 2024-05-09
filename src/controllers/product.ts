@@ -83,7 +83,7 @@ export const updateProduct = TryCatch(async (req, res, next) => {
 
     product.photo = photo.path;
   }
-
+console.log(name,category,stock);
   if (name) product.name = name;
   if (price) product.price = price;
   if (stock) product.stock = stock;
@@ -94,6 +94,7 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   return res.status(200).json({
     success: "true",
     message: "Product Updated successfully",
+    // product
   });
 });
 
