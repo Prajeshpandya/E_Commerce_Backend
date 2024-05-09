@@ -18,11 +18,11 @@ const router = Router();
 router.post("/new", adminOnly, singleUpload, newProduct);
 router.get("/latest", getLatestProducts);
 router.get("/categories", getAllCategories);
-router.get("/admin-products", getAdminProducts);
+router.get("/admin-products",adminOnly, getAdminProducts);
 router
   .route("/:id")
   .get(getSingleProduct)
-  .put(singleUpload, updateProduct)
-  .delete(deleteProduct);
+  .put(adminOnly,singleUpload, updateProduct)
+  .delete(adminOnly,deleteProduct);
 
 export default router;
