@@ -141,7 +141,6 @@ export const getAllProducts = TryCatch(
 
     if (category) baseQuery.category = category;
 
-    //
 
     const productsPromise = Product.find(baseQuery)
       .sort(sort && { price: sort === "asc" ? 1 : -1 })
