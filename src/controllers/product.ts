@@ -9,31 +9,7 @@ import { Product } from "../models/product.js";
 import ErrorHandler from "../utils/utilityClass.js";
 import { rm } from "fs";
 import { myCache } from "../app.js";
-
-export const newProduct = TryCatch(
-  async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
-    const { name, price, stock, category } = req.body;
-    const photo = req.file;
-
-    if (!photo) return next(new ErrorHandler("Please Add Photo ", 400));
-    if (!name || !price || !stock || !category) {
-      rm(photo.path, () => console.log("deleted"));
-      return next(new ErrorHandler("Please enter all fields  ", 400));
-    }
-    await Product.create({
-      name,
-      price,
-      stock,
-      category: category.toLowerCase(),
-      photo: photo.path,
-    });
-
-    return res.status(201).json({
-      success: "true",
-      message: "Product created successfully",
-    });
-  }
-);
+import { inValidateCache } from "../utils/features.js";
 
 // Revalidate on New,Update,Delete & New Order!
 export const getLatestProducts = TryCatch(async (req, res, next) => {
@@ -103,6 +79,33 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
   });
 });
 
+export const newProduct = TryCatch(
+  async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
+    const { name, price, stock, category } = req.body;
+    const photo = req.file;
+
+    if (!photo) return next(new ErrorHandler("Please Add Photo ", 400));
+    if (!name || !price || !stock || !category) {
+      rm(photo.path, () => console.log("deleted"));
+      return next(new ErrorHandler("Please enter all fields  ", 400));
+    }
+    await Product.create({
+      name,
+      price,
+      stock,
+      category: category.toLowerCase(),
+      photo: photo.path,
+    });
+
+    await inValidateCache({ product: true });
+
+    return res.status(201).json({
+      success: "true",
+      message: "Product created successfully",
+    });
+  }
+);
+
 export const updateProduct = TryCatch(async (req, res, next) => {
   //here change controller type req to any.. for pass id to string! or do directly bcz here not all field is required
 
@@ -126,6 +129,8 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   if (category) product.category = category;
 
   await product.save();
+  await inValidateCache({ product: true });
+
 
   return res.status(200).json({
     success: "true",
@@ -142,6 +147,7 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
   rm(product.photo!, () => console.log("Product Photo Deleted"));
 
   await Product.deleteOne();
+  await inValidateCache({ product: true });
 
   return res.status(200).json({
     success: "true",
