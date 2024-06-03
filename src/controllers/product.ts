@@ -8,7 +8,7 @@ import {
 import { Product } from "../models/product.js";
 import ErrorHandler from "../utils/utilityClass.js";
 import { rm } from "fs";
-import { faker } from "@faker-js/faker";
+import { myCache } from "../app.js";
 
 export const newProduct = TryCatch(
   async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
@@ -36,7 +36,15 @@ export const newProduct = TryCatch(
 );
 
 export const getLatestProducts = TryCatch(async (req, res, next) => {
-  const products = await Product.find({}).sort({ createdAt: -1 }).limit(5);
+  let products = [];
+
+  if (myCache.has("latest-product")) 
+    products = JSON.parse(myCache.get("latest-product")!);
+  
+
+   products = await Product.find({}).sort({ createdAt: -1 }).limit(5);
+
+  myCache.set("latest-product", JSON.stringify(products));
 
   return res.status(200).json({
     success: "true",
@@ -141,7 +149,6 @@ export const getAllProducts = TryCatch(
 
     if (category) baseQuery.category = category;
 
-
     const productsPromise = Product.find(baseQuery)
       .sort(sort && { price: sort === "asc" ? 1 : -1 })
       .limit(limit)
@@ -163,9 +170,6 @@ export const getAllProducts = TryCatch(
     });
   }
 );
-
-
-
 
 // const generateRandomProducts = async (count: number = 10) => {
 //   const products = [];
@@ -189,7 +193,6 @@ export const getAllProducts = TryCatch(
 
 //   console.log({ succecss: true });
 // };
-
 
 // const deleteRandomsProducts = async (count: number = 20) => {
 //   const products = await Product.find({}).skip(2);
