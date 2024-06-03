@@ -40,7 +40,7 @@ export interface BaseQuery {
   category?: string;
 }
 
-export type InValidateCacheProps {
+export type InValidateCacheProps = {
   product? : boolean;
   order?:boolean;
   admin?:boolean;
