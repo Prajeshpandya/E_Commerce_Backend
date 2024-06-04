@@ -45,3 +45,15 @@ export type InValidateCacheProps = {
   order?:boolean;
   admin?:boolean;
 }
+
+export interface NewOrderRequestBody {
+
+  shippingInfo:{},
+  user:string;
+  subTotal:number;
+  tax:number;
+  shippingCharges:number;
+  discount:number;
+  total:number;
+  orderItems:[]
+}
