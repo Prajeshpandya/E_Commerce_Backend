@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { InValidateCacheProps } from "../types/type.js";
 import { Product } from "../models/product.js";
+import { myCache } from "../app.js";
 
 export const connDb = () => {
   mongoose
@@ -26,9 +27,14 @@ export const inValidateCache = async ({
     const products = await Product.find({}).select("_id");
 
     products.forEach((i) => {
-      productKeys.push(`product-${i._id}`);
+      productKeys.push(`product-${i._id}`); 
+      
+      //ex: "product-60d21b4667d0d8992e610c85",
+      // for made like this
+      // "product-60d21b4667d0d8992e610c87"
     });
-    
+
+    myCache.del(productKeys);
   }
   if (order) {
   }

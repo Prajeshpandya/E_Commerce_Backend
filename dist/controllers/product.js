@@ -53,7 +53,7 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
     let product;
     const id = req.params.id;
     if (myCache.has(`product-${id}`)) {
-        product = JSON.parse(myCache.get(`product-${id}`));
+        product = JSON.parse(myCache.get(`product-${id}`)); //we can get data in parse form only !
     }
     else {
         product = await Product.findById(id);
