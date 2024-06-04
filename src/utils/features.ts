@@ -3,9 +3,9 @@ import { InValidateCacheProps } from "../types/type.js";
 import { Product } from "../models/product.js";
 import { myCache } from "../app.js";
 
-export const connDb = () => {
+export const connDb = (uri: string) => {
   mongoose
-    .connect("mongodb://localhost:27017", { dbName: "E-Commerce" })
+    .connect(uri, { dbName: "E-Commerce" })
     .then((c) => {
       console.log(`DataBase Connected to ${c.connection.host}`);
     })
@@ -27,8 +27,8 @@ export const inValidateCache = async ({
     const products = await Product.find({}).select("_id");
 
     products.forEach((i) => {
-      productKeys.push(`product-${i._id}`); 
-      
+      productKeys.push(`product-${i._id}`);
+
       //ex: "product-60d21b4667d0d8992e610c85",
       // for made like this
       // "product-60d21b4667d0d8992e610c87"
