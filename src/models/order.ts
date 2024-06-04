@@ -2,27 +2,70 @@ import mongoose from "mongoose";
 
 const schema = new mongoose.Schema(
   {
-    name: {
+    shipppingInfo: {
+      address: {
+        type: String,
+        required: true,
+      },
+      city: {
+        type: String,
+        required: true,
+      },
+      state: {
+        type: String,
+        required: true,
+      },
+      country: {
+        type: String,
+        required: true,
+      },
+      pinCode: {
+        type: Number,
+        required: true,
+      },
+    },
+    user: {
       type: String,
-      required: [true, "Please enter name"],
+      ref: "User",
+      required: true,
     },
-    photo:{
-        type: String,
-        required: [true, "Please enter photo"],
+    subTotal: {
+      type: Number,
+      required: true,
     },
-    price:{
-        type: Number,
-        required: [true, "Please enter price"],
+    tax: {
+      type: Number,
+      required: true,
     },
-    stock:{
-        type: Number,
-        required: [true, "Please enter photo"],
+    shippingCharges: {
+      type: Number,
+      required: true,
     },
-    category:{
-        type: String,
-        required: [true, "Please enter product category"],
-        trim:true
-    }
+    discount: {
+      type: Number,
+      required: true,
+    },
+    total: {
+      type: Number,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["Processing", "Shipped", "Delivered"],
+      default: "Processing",
+    },
+    orderItems: [
+      {
+        name: String,
+        photo: String,
+        price: Number,
+        quantity: Number,
+        productId: {
+          type: mongoose.Types.ObjectId,
+          ref: "Product",
+        },
+      },
+    ],
   },
 
   { timestamps: true }
