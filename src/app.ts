@@ -6,21 +6,25 @@ import { connDb } from "./utils/features.js";
 import { errorMiddleware } from "./middlewares/error.js";
 import NodeCache from "node-cache";
 import { config } from "dotenv";
+import morgan from "morgan"
 
 export const app = express();
-
-const port = process.env.PORT || 5000 ;
-const mongo_uri = process.env.MONGO_URI || "";
 
 config({
   path:"./.env"
 })
+
+const port = process.env.PORT || 5000 ;
+const mongo_uri = process.env.MONGO_URI || "";
+
+
 
 connDb(mongo_uri);
 
 export const myCache = new NodeCache();
 
 app.use(express.json());
+app.use(morgan("dev"))
 
 //using Routes
 app.use("/api/v1/user", userRoute);
