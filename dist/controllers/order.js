@@ -2,6 +2,7 @@ import { TryCatch } from "../middlewares/error.js";
 import { Order } from "../models/order.js";
 import { inValidateCache, reduceStock } from "../utils/features.js";
 import ErrorHandler from "../utils/utilityClass.js";
+import { myCache } from "../app.js";
 export const newOrder = TryCatch(async (req, res, next) => {
     const { shippingInfo, orderItems, user, subTotal, discount, total, shippingCharges, tax, } = req.body;
     if (!shippingInfo ||
@@ -28,5 +29,20 @@ export const newOrder = TryCatch(async (req, res, next) => {
     res.status(201).json({
         success: "true",
         message: "Your Order Has Been Placed Successfully!",
+    });
+});
+export const myOrders = TryCatch(async (req, res, next) => {
+    const { id: user } = req.query;
+    let orders;
+    if (myCache.has(`my-orders ${user}`)) {
+        orders = JSON.parse(myCache.get(`my-orders ${user}`));
+    }
+    else {
+        orders = await Order.find({ user });
+        myCache.set(`my-orders ${user}`, JSON.stringify(orders));
+    }
+    res.status(201).json({
+        success: "true",
+        orders,
     });
 });
