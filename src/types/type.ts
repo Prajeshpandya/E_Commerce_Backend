@@ -41,19 +41,34 @@ export interface BaseQuery {
 }
 
 export type InValidateCacheProps = {
-  product? : boolean;
-  order?:boolean;
-  admin?:boolean;
-}
+  product?: boolean;
+  order?: boolean;
+  admin?: boolean;
+};
+
+export type orderItemType = {
+  name: string;
+  photo: string;
+  price: number;
+  quantity: number;
+  productId: string;
+};
+
+export type shippingInfoType = {
+  address: string;
+  city: string;
+  state: number;
+  country: number;
+  pinCode: number;
+};
 
 export interface NewOrderRequestBody {
-
-  shippingInfo:{},
-  user:string;
-  subTotal:number;
-  tax:number;
-  shippingCharges:number;
-  discount:number;
-  total:number;
-  orderItems:[]
+  shippingInfo: shippingInfoType;
+  user: string;
+  subTotal: number;
+  tax: number;
+  shippingCharges: number;
+  discount: number;
+  total: number;
+  orderItems: orderItemType[];
 }

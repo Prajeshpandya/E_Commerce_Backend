@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 const schema = new mongoose.Schema({
-    shipppingInfo: {
+    shippingInfo: {
         address: {
             type: String,
             required: true,
@@ -38,10 +38,12 @@ const schema = new mongoose.Schema({
     shippingCharges: {
         type: Number,
         required: true,
+        default: 0
     },
     discount: {
         type: Number,
         required: true,
+        default: 0
     },
     total: {
         type: Number,
