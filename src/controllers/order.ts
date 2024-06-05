@@ -73,3 +73,37 @@ export const myOrders = TryCatch(
     });
   }
 );
+
+export const allOrders = TryCatch(async (req, res, next) => {
+  let orders;
+
+  if (myCache.has("my-orders")) {
+    orders = JSON.parse(myCache.get("my-orders")!);
+  } else {
+    //here we need user details also so we did that & also specify single field also
+    orders = await Order.find().populate("user", "name"); //pass populate parameter that we need to mention , and use ref in model
+    myCache.set("my-orders", JSON.stringify(orders));
+  }
+
+  return res.status(200).json({
+    success: "true",
+    orders,
+  });
+});
+export const getSingleOrder = TryCatch(async (req, res, next) => {
+  const {id} = req.params;
+  let order;
+
+  if (myCache.has(`order ${id}`)) {
+    order = JSON.parse(myCache.get(`order ${id}`)!);
+  } else {
+    order = await Order.findById(id).populate("user", "name");
+    if (!order) return next(new ErrorHandler("Order Not Found! ", 404));
+    myCache.set(`order ${id}`, JSON.stringify(order));
+  }
+
+  return res.status(200).json({
+    success: "true",
+    order,
+  });
+});
