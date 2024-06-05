@@ -100,12 +100,16 @@ export const newOrder = TryCatch(
     });
 
     await reduceStock(orderItems);
+
+    //create the perticular user's order so we need to revalidate that. so we pass the userId of the user and revalidate the keys.
     await inValidateCache({
       product: true,
       order: true,
       admin: true,
       userId: user,
     });
+
+    //at this point we not add the orderId and not revalidate that bcz.. at that time not even have the order id so there is no point to do that !
 
     res.status(201).json({
       success: "true",
@@ -136,11 +140,14 @@ export const processOrder = TryCatch(async (req, res, next) => {
 
   await order.save();
 
+  //here admin update the order so not necessory that he update the order of self, so it can be update the other's order so we have to specify the id of that perticular user from the order itself
+
   await inValidateCache({
     product: false,
     order: true,
     admin: true,
     userId: order.user,
+    orderId: String(order._id),
   });
 
   res.status(200).json({
@@ -157,11 +164,13 @@ export const deleteOrder = TryCatch(async (req, res, next) => {
 
   await order.deleteOne();
 
+  //here admin update the order so not necessory that he update the order of self, so it can be update the other's order so we have to specify the id of that perticular user from the order itself
   await inValidateCache({
     product: false,
     order: true,
     admin: true,
     userId: order.user,
+    orderId: String(order._id),
   });
 
   res.status(200).json({

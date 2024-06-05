@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import { Product } from "../models/product.js";
 import { myCache } from "../app.js";
-import { Order } from "../models/order.js";
 export const connDb = (uri) => {
     mongoose
         .connect(uri, { dbName: "E-Commerce" })
@@ -10,7 +9,7 @@ export const connDb = (uri) => {
     })
         .catch((e) => console.log(e));
 };
-export const inValidateCache = async ({ product, order, admin, userId }) => {
+export const inValidateCache = async ({ product, order, admin, userId, orderId }) => {
     if (product) {
         const productKeys = [
             "latest-products",
@@ -27,13 +26,13 @@ export const inValidateCache = async ({ product, order, admin, userId }) => {
         myCache.del(productKeys);
     }
     if (order) {
-        const orderKeys = [
-            "all-orders", `my-orders ${userId}`
-        ];
-        const orders = await Order.find({}).select("_id");
-        orders.forEach(i => {
-            orderKeys.push(`order-${i._id}`);
-        });
+        // Revalidate on New,Update,Delete & New Order!
+        //delete the cache data when the order's change, and we need to remove the cache data accordingly!
+        const orderKeys = ["all-orders", `my-orders ${userId}`, `order-${orderId}`];
+        // const orders = await Order.find({}).select("_id");
+        // orders.forEach((i) => {
+        //   orderKeys.push();
+        // });
         myCache.del(orderKeys);
     }
     if (admin) {
