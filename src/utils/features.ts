@@ -2,8 +2,7 @@ import mongoose from "mongoose";
 import { InValidateCacheProps, orderItemType } from "../types/type.js";
 import { Product } from "../models/product.js";
 import { myCache } from "../app.js";
-import { Order } from "../models/order.js";
-import { User } from "../models/user.js";
+
 
 export const connDb = (uri: string) => {
   mongoose
@@ -32,7 +31,7 @@ export const inValidateCache = async ({
     if (typeof productId === "string") {
       productKeys.push(`product-${productId}`);
     }
-    
+
     if (typeof productId === "object") {
       productKeys.forEach((i) => productKeys.push(`product-${i}`));
       console.log("working");
