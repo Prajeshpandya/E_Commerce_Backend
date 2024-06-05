@@ -9,26 +9,37 @@ export const connDb = (uri) => {
     })
         .catch((e) => console.log(e));
 };
-export const inValidateCache = async ({ product, order, admin, userId, orderId }) => {
+export const inValidateCache = async ({ product, order, admin, userId, orderId, productId, }) => {
     if (product) {
         const productKeys = [
             "latest-products",
             "categories",
             "all-products",
         ];
-        const products = await Product.find({}).select("_id");
-        products.forEach((i) => {
-            productKeys.push(`product-${i._id}`);
-            //ex: "product-60d21b4667d0d8992e610c85",
-            // for made like this
-            // "product-60d21b4667d0d8992e610c87"
-        });
+        if (typeof productId === "string") {
+            productKeys.push(`product-${productId}`);
+        }
+        if (typeof productId === "object") {
+            productKeys.forEach((i) => productKeys.push(`product-${i}`));
+            console.log("working");
+        }
+        // const products = await Product.find({}).select("_id");
+        // products.forEach((i) => {
+        //   productKeys.push(`product-${i._id}`);
+        //   //ex: "product-60d21b4667d0d8992e610c85",
+        //   // for made like this
+        //   // "product-60d21b4667d0d8992e610c87"
+        // });
         myCache.del(productKeys);
     }
     if (order) {
         // Revalidate on New,Update,Delete & New Order!
         //delete the cache data when the order's change, and we need to remove the cache data accordingly!
-        const orderKeys = ["all-orders", `my-orders ${userId}`, `order-${orderId}`];
+        const orderKeys = [
+            "all-orders",
+            `my-orders ${userId}`,
+            `order-${orderId}`,
+        ];
         // const orders = await Order.find({}).select("_id");
         // orders.forEach((i) => {
         //   orderKeys.push();

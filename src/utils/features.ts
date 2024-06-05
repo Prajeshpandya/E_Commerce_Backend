@@ -19,7 +19,8 @@ export const inValidateCache = async ({
   order,
   admin,
   userId,
-  orderId
+  orderId,
+  productId,
 }: InValidateCacheProps) => {
   if (product) {
     const productKeys: string[] = [
@@ -28,15 +29,24 @@ export const inValidateCache = async ({
       "all-products",
     ];
 
-    const products = await Product.find({}).select("_id");
+    if (typeof productId === "string") {
+      productKeys.push(`product-${productId}`);
+    }
+    
+    if (typeof productId === "object") {
+      productKeys.forEach((i) => productKeys.push(`product-${i}`));
+      console.log("working");
+    }
 
-    products.forEach((i) => {
-      productKeys.push(`product-${i._id}`);
+    // const products = await Product.find({}).select("_id");
 
-      //ex: "product-60d21b4667d0d8992e610c85",
-      // for made like this
-      // "product-60d21b4667d0d8992e610c87"
-    });
+    // products.forEach((i) => {
+    //   productKeys.push(`product-${i._id}`);
+
+    //   //ex: "product-60d21b4667d0d8992e610c85",
+    //   // for made like this
+    //   // "product-60d21b4667d0d8992e610c87"
+    // });
 
     myCache.del(productKeys);
   }
@@ -44,7 +54,11 @@ export const inValidateCache = async ({
     // Revalidate on New,Update,Delete & New Order!
 
     //delete the cache data when the order's change, and we need to remove the cache data accordingly!
-    const orderKeys: string[] = ["all-orders", `my-orders ${userId}` , `order-${orderId}`];
+    const orderKeys: string[] = [
+      "all-orders",
+      `my-orders ${userId}`,
+      `order-${orderId}`,
+    ];
 
     // const orders = await Order.find({}).select("_id");
 

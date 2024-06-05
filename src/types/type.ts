@@ -46,6 +46,7 @@ export type InValidateCacheProps = {
   admin?: boolean;
   userId?: string;
   orderId?: string;
+  productId?: string | string[];  //string array bcz in new order there are multiple products can be there in one order..
 };
 
 export type orderItemType = {

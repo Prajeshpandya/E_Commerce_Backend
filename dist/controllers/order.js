@@ -61,7 +61,7 @@ export const newOrder = TryCatch(async (req, res, next) => {
         !shippingCharges ||
         !tax)
         return next(new ErrorHandler("Please add the all valid Credentials!", 400));
-    await Order.create({
+    const order = await Order.create({
         shippingInfo,
         orderItems,
         user,
@@ -78,6 +78,7 @@ export const newOrder = TryCatch(async (req, res, next) => {
         order: true,
         admin: true,
         userId: user,
+        productId: order.orderItems.map(i => String(i.productId))
     });
     //at this point we not add the orderId and not revalidate that bcz.. at that time not even have the order id so there is no point to do that !
     res.status(201).json({
