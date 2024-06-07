@@ -7,7 +7,7 @@ import ErrorHandler from "../utils/utilityClass.js";
 import { myCache } from "../app.js";
 
 export const myOrders = TryCatch(
-  async (req: Request<{}, {}, NewOrderRequestBody>, res, next) => {
+  async (req, res, next) => {
     const { id: user } = req.query;
 
     let orders;
