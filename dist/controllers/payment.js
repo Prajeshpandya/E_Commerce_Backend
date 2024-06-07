@@ -35,6 +35,6 @@ export const deleteCoupon = TryCatch(async (req, res, next) => {
         return next(new ErrorHandler("Coupon is not exist", 404));
     return res.status(200).json({
         success: true,
-        message: "Coupon Deleted Successfully",
+        message: `Coupon ${coupon.code} Deleted Successfully`,
     });
 });
