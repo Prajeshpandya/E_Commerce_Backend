@@ -26,6 +26,7 @@ export const getLatestProducts = TryCatch(async (req, res, next) => {
     success: "true",
     products,
   });
+  
 });
 
 // Revalidate on New,Update,Delete & New Order!
