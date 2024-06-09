@@ -8,6 +8,7 @@ import { errorMiddleware } from "./middlewares/error.js";
 import NodeCache from "node-cache";
 import { config } from "dotenv";
 import morgan from "morgan"
+import statsRoute from "./routes/stats.js"
 
 export const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/v1/user", userRoute);
 app.use("/api/v1/product", productRoute);
 app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/payment", paymentRoute);
+app.use("/api/v1/stats", statsRoute);
 
 app.use("/", (req, res, next) => {
   res.send("API is Working with /api/v1 !");
