@@ -3,6 +3,7 @@ import { allCoupons, applyDiscount, deleteCoupon, newCoupon } from "../controlle
 import { adminOnly } from "../middlewares/adminOnly.js";
 const router = Router();
 //route- /api/v1/payment/...
+//test all the apis in postman
 router.get("/discount", applyDiscount);
 router.post("/coupon/new", adminOnly, newCoupon);
 router.get("/discount/all", adminOnly, allCoupons);

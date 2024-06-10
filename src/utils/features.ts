@@ -3,7 +3,6 @@ import { InValidateCacheProps, orderItemType } from "../types/type.js";
 import { Product } from "../models/product.js";
 import { myCache } from "../app.js";
 
-
 export const connDb = (uri: string) => {
   mongoose
     .connect(uri, { dbName: "E-Commerce" })
@@ -80,4 +79,11 @@ export const reduceStock = async (orderItems: orderItemType[]) => {
     product.stock -= order.quantity;
     await product.save();
   }
+};
+
+export const calculatePercentage = (thisMonth: number, lastMonth: number) => {
+  if (lastMonth === 0) return thisMonth * 100;
+
+  const percent = ((thisMonth - lastMonth) / lastMonth) * 100;
+  return Number(percent.toFixed(0));
 };

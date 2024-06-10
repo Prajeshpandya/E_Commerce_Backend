@@ -33,7 +33,7 @@ app.use("/api/v1/user", userRoute);
 app.use("/api/v1/product", productRoute);
 app.use("/api/v1/order", orderRoute);
 app.use("/api/v1/payment", paymentRoute);
-app.use("/api/v1/stats", statsRoute);
+app.use("/api/v1/dashboard", statsRoute);
 
 app.use("/", (req, res, next) => {
   res.send("API is Working with /api/v1 !");
