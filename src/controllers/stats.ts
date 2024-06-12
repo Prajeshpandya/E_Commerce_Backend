@@ -20,10 +20,10 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
 
     const lastMonth = {
       start: new Date(today.getFullYear(), today.getMonth() - 1, 1),
-
       //here 0 means ex: if today 23th october ;
-      // last month's last date is , today's month is october and if october 0 means its september 30st   );
-
+      // last month's last date is , today's month is october and if october 0 means its september 30th  );
+      
+      // 0 specifies the day of the month (which effectively gives the last day of the previous month).
       end: new Date(today.getFullYear(), today.getMonth(), 0),
     };
 
