@@ -69,7 +69,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
         const latestTransactionPromise = Order.find({})
             .select(["orderItems", "discount", "total", "status"])
             .limit(4);
-        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthProducts, lastMonthOrders, lastMonthUsers, productsCount, usersCount, allOrders, sixMonthAgoOrders, categories, femaleUserCount, latestTransaction] = await Promise.all([
+        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthProducts, lastMonthOrders, lastMonthUsers, productsCount, usersCount, allOrders, sixMonthAgoOrders, categories, femaleUserCount, latestTransaction,] = await Promise.all([
             thisMonthProductsPromise,
             thisMonthOrdersPromise,
             thisMonthUsersPromise,
@@ -82,7 +82,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             lastSixMonthOrdersPromise,
             Product.distinct("category"),
             User.countDocuments({ gender: "female" }),
-            latestTransactionPromise
+            latestTransactionPromise,
         ]);
         const thisMonthRevenue = thisMonthOrders.reduce((total, order) => total + (order.total || 0), 
         //   order: The current order object in the iteration.
@@ -138,13 +138,13 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             male: usersCount - femaleUserCount,
             female: femaleUserCount,
         };
-        //latest modified Transaction 
+        //latest modified Transaction
         const modifiedLatestTransaction = latestTransaction.map((i) => ({
             _id: i._id,
             discount: i.discount,
             amount: i.total,
             quantity: i.orderItems.length,
-            status: i.status
+            status: i.status,
         }));
         stats = {
             changePercent,
@@ -155,7 +155,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             },
             categoryCount,
             userRatio,
-            latestTransaction: modifiedLatestTransaction
+            latestTransaction: modifiedLatestTransaction,
         };
         myCache.set("admin-stats", JSON.stringify(stats));
     }
@@ -164,6 +164,51 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
         stats,
     });
 });
-export const getPieCharts = TryCatch(async (req, res, next) => { });
+export const getPieCharts = TryCatch(async (req, res, next) => {
+    let charts;
+    if (myCache.has("admin-pie-charts")) {
+        charts = JSON.parse(myCache.get("admin-pie-charts"));
+    }
+    else {
+        const [processingOrder, shippedOrder, deliveredOrder, categories, productsCount, productsOutOfStock] = await Promise.all([
+            Order.countDocuments({ status: "Processing" }),
+            Order.countDocuments({ status: "Shipped" }),
+            Order.countDocuments({ status: "Delivered" }),
+            Product.distinct("category"),
+            Product.countDocuments(),
+            Product.countDocuments({ stock: 0 }),
+        ]);
+        const orderFullfillmentRatio = {
+            processing: processingOrder,
+            shipping: shippedOrder,
+            delivered: deliveredOrder,
+        };
+        const categoriesCountPromise = categories.map((category) => Product.countDocuments({ category }));
+        //did promise.all because for every category it awaits and also have to made the function async .
+        const categoriesCount = await Promise.all(categoriesCountPromise);
+        const categoryCount = [];
+        //Without the square brackets, category would be interpreted as a literal property name, not a variable.
+        categories.forEach((category, i) => {
+            categoryCount.push({
+                [category]: Math.round((categoriesCount[i] / productsCount) * 100),
+            });
+        });
+        //for stock avalability.. 
+        const stockAvailability = {
+            inStock: productsCount - productsOutOfStock,
+            outOfStock: productsOutOfStock
+        };
+        charts = {
+            orderFullfillmentRatio,
+            categoryCount,
+            stockAvailability
+        };
+        myCache.set("admin-pie-charts", JSON.stringify(charts));
+    }
+    res.status(200).json({
+        success: true,
+        charts,
+    });
+});
 export const getBarCharts = TryCatch(async (req, res, next) => { });
 export const getLineCharts = TryCatch(async (req, res, next) => { });
