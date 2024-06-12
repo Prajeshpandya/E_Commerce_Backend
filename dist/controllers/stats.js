@@ -66,7 +66,10 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
                 $lte: today,
             },
         });
-        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthProducts, lastMonthOrders, lastMonthUsers, productsCount, usersCount, allOrders, sixMonthAgoOrders, categories,] = await Promise.all([
+        const latestTransactionPromise = Order.find({})
+            .select(["orderItems", "discount", "total", "status"])
+            .limit(4);
+        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthProducts, lastMonthOrders, lastMonthUsers, productsCount, usersCount, allOrders, sixMonthAgoOrders, categories, femaleUserCount, latestTransaction] = await Promise.all([
             thisMonthProductsPromise,
             thisMonthOrdersPromise,
             thisMonthUsersPromise,
@@ -78,6 +81,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             Order.find({}).select("total"),
             lastSixMonthOrdersPromise,
             Product.distinct("category"),
+            User.countDocuments({ gender: "female" }),
+            latestTransactionPromise
         ]);
         const thisMonthRevenue = thisMonthOrders.reduce((total, order) => total + (order.total || 0), 
         //   order: The current order object in the iteration.
@@ -119,22 +124,40 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
         });
         //for make key value pair of the categories.
         const categoriesCountPromise = categories.map((category) => Product.countDocuments({ category }));
+        //did promise.all because for every category it awaits and also have to made the function async .
         const categoriesCount = await Promise.all(categoriesCountPromise);
         const categoryCount = [];
+        //Without the square brackets, category would be interpreted as a literal property name, not a variable.
         categories.forEach((category, i) => {
             categoryCount.push({
                 [category]: Math.round((categoriesCount[i] / productsCount) * 100),
             });
         });
+        //ration of men & women..
+        const userRatio = {
+            male: usersCount - femaleUserCount,
+            female: femaleUserCount,
+        };
+        //latest modified Transaction 
+        const modifiedLatestTransaction = latestTransaction.map((i) => ({
+            _id: i._id,
+            discount: i.discount,
+            amount: i.total,
+            quantity: i.orderItems.length,
+            status: i.status
+        }));
         stats = {
-            categoryCount,
             changePercent,
             count,
             chart: {
                 order: orderMonthCounts,
                 revenue: orderMonthRevenue,
             },
+            categoryCount,
+            userRatio,
+            latestTransaction: modifiedLatestTransaction
         };
+        myCache.set("admin-stats", JSON.stringify(stats));
     }
     return res.status(200).json({
         success: true,

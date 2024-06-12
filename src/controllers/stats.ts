@@ -74,6 +74,10 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       },
     });
 
+    const latestTransactionPromise = Order.find({})
+      .select(["orderItems", "discount", "total", "status"])
+      .limit(4);
+
     const [
       thisMonthProducts,
       thisMonthOrders,
@@ -86,6 +90,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       allOrders,
       sixMonthAgoOrders,
       categories,
+      femaleUserCount,
+      latestTransaction
     ] = await Promise.all([
       thisMonthProductsPromise,
       thisMonthOrdersPromise,
@@ -98,6 +104,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       Order.find({}).select("total"),
       lastSixMonthOrdersPromise,
       Product.distinct("category"),
+      User.countDocuments({ gender: "female" }),
+      latestTransactionPromise
     ]);
 
     const thisMonthRevenue = thisMonthOrders.reduce(
@@ -160,25 +168,48 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       Product.countDocuments({ category })
     );
 
+    //did promise.all because for every category it awaits and also have to made the function async .
     const categoriesCount = await Promise.all(categoriesCountPromise);
 
     const categoryCount: Record<string, number>[] = [];
 
+    //Without the square brackets, category would be interpreted as a literal property name, not a variable.
     categories.forEach((category, i) => {
       categoryCount.push({
         [category]: Math.round((categoriesCount[i] / productsCount) * 100),
       });
     });
 
+    //ration of men & women..
+
+    const userRatio = {
+      male: usersCount - femaleUserCount,
+      female: femaleUserCount,
+    };
+
+    //latest modified Transaction 
+    const modifiedLatestTransaction =  latestTransaction.map((i)=>({
+      _id:i._id,
+      discount:i.discount,
+      amount:i.total,
+      quantity:i.orderItems.length,
+      status:i.status
+    }))
     stats = {
-      categoryCount,
       changePercent,
       count,
       chart: {
         order: orderMonthCounts,
         revenue: orderMonthRevenue,
       },
+      categoryCount,
+      userRatio,
+      latestTransaction : modifiedLatestTransaction
     };
+
+
+    myCache.set("admin-stats",JSON.stringify(stats))
+
   }
   return res.status(200).json({
     success: true,
