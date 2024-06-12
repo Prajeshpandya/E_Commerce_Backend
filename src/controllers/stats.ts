@@ -12,6 +12,10 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
     stats = JSON.parse(myCache.get("admin-stats")!);
   } else {
     const today = new Date(); //here the last day of this month is today obiosly because we can no go to future and make changes in stats.. so from today we can decode the last month
+    const sixMonthAgo = new Date();
+    sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 6);
+
+
 
     const thisMonth = {
       start: new Date(today.getFullYear(), today.getMonth(), 1),
@@ -65,6 +69,12 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
         $lte: lastMonth.end,
       },
     });
+    const lastSixMonthOrdersPromise = Order.find({
+      createdAt: {
+        $gte:sixMonthAgo ,
+        $lte:today ,
+      },
+    });
 
     const [
       thisMonthProducts,
@@ -76,6 +86,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       productsCount,
       usersCount,
       allOrders,
+      sixMonthAgoOrders
     ] = await Promise.all([
       thisMonthProductsPromise,
       thisMonthOrdersPromise,
@@ -86,6 +97,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       Product.countDocuments(),
       User.countDocuments(),
       Order.find({}).select("total"),
+      lastSixMonthOrdersPromise
     ]);
 
     const thisMonthRevenue = thisMonthOrders.reduce(
@@ -125,9 +137,34 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
         order:allOrders.length
     }
 
+    const orderMonthCounts = new Array(6).fill(0);
+    const orderMonthRevenue = new Array(6).fill(0);
+
+ //for BarChart of home page.. 
+    sixMonthAgoOrders.forEach((order)=>{
+      const creationDate = order.createdAt;
+      const monthDiff = today.getMonth() - creationDate.getMonth();
+
+
+      // working flow: createmonth : 10 as per 0 base indexing , today month : 5 => so,  monthDiff = 5, so at 0th index it will be increase by 1 
+
+      //if month diffrence less than 6..
+      if(monthDiff < 6)
+        {
+          //5 bcz of last index of the oorderMonthCount array. 
+          orderMonthCounts[5 - monthDiff] +=1;  
+          orderMonthRevenue[5 - monthDiff] += order.total;  
+
+        }
+    })
+
     stats = {
       changePercent,
-      count
+      count,
+      chart:{
+        order:orderMonthCounts,
+        revenue:orderMonthRevenue
+      }
     };
   }
   return res.status(200).json({
