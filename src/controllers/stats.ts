@@ -15,8 +15,6 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
     const sixMonthAgo = new Date();
     sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 6);
 
-
-
     const thisMonth = {
       start: new Date(today.getFullYear(), today.getMonth(), 1),
       end: today,
@@ -26,7 +24,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       start: new Date(today.getFullYear(), today.getMonth() - 1, 1),
       //here 0 means ex: if today 23th october ;
       // last month's last date is , today's month is october and if october 0 means its september 30th  );
-      
+
       // 0 specifies the day of the month (which effectively gives the last day of the previous month).
       end: new Date(today.getFullYear(), today.getMonth(), 0),
     };
@@ -71,8 +69,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
     });
     const lastSixMonthOrdersPromise = Order.find({
       createdAt: {
-        $gte:sixMonthAgo ,
-        $lte:today ,
+        $gte: sixMonthAgo,
+        $lte: today,
       },
     });
 
@@ -86,7 +84,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       productsCount,
       usersCount,
       allOrders,
-      sixMonthAgoOrders
+      sixMonthAgoOrders,
+      categories,
     ] = await Promise.all([
       thisMonthProductsPromise,
       thisMonthOrdersPromise,
@@ -97,7 +96,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       Product.countDocuments(),
       User.countDocuments(),
       Order.find({}).select("total"),
-      lastSixMonthOrdersPromise
+      lastSixMonthOrdersPromise,
+      Product.distinct("category"),
     ]);
 
     const thisMonthRevenue = thisMonthOrders.reduce(
@@ -126,45 +126,58 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
 
     const revenue = allOrders.reduce(
       (total, order) => total + (order.total || 0),
-        //   order: The current order object in the iteration.
+      //   order: The current order object in the iteration.
       0 // Initial value of the accumulator(total)
     );
 
     const count = {
-       revenue,
-        user:usersCount,
-        product:productsCount,
-        order:allOrders.length
-    }
+      revenue,
+      user: usersCount,
+      product: productsCount,
+      order: allOrders.length,
+    };
 
     const orderMonthCounts = new Array(6).fill(0);
     const orderMonthRevenue = new Array(6).fill(0);
 
- //for BarChart of home page.. 
-    sixMonthAgoOrders.forEach((order)=>{
+    //for BarChart of home page..
+    sixMonthAgoOrders.forEach((order) => {
       const creationDate = order.createdAt;
       const monthDiff = today.getMonth() - creationDate.getMonth();
 
-
-      // working flow: createmonth : 10 as per 0 base indexing , today month : 5 => so,  monthDiff = 5, so at 0th index it will be increase by 1 
+      // working flow: createmonth : 10 as per 0 base indexing , today month : 5 => so,  monthDiff = 5, so at 0th index it will be increase by 1
 
       //if month diffrence less than 6..
-      if(monthDiff < 6)
-        {
-          //5 bcz of last index of the oorderMonthCount array. 
-          orderMonthCounts[5 - monthDiff] +=1;  
-          orderMonthRevenue[5 - monthDiff] += order.total;  
+      if (monthDiff < 6) {
+        //5 bcz of last index of the oorderMonthCount array.
+        orderMonthCounts[5 - monthDiff] += 1;
+        orderMonthRevenue[5 - monthDiff] += order.total;
+      }
+    });
 
-        }
-    })
+    //for make key value pair of the categories.
+    const categoriesCountPromise = categories.map((category) =>
+      Product.countDocuments({ category })
+    );
+
+    const categoriesCount = await Promise.all(categoriesCountPromise);
+
+    const categoryCount: Record<string, number>[] = [];
+
+    categories.forEach((category, i) => {
+      categoryCount.push({
+        [category]: Math.round((categoriesCount[i] / productsCount) * 100),
+      });
+    });
 
     stats = {
+      categoryCount,
       changePercent,
       count,
-      chart:{
-        order:orderMonthCounts,
-        revenue:orderMonthRevenue
-      }
+      chart: {
+        order: orderMonthCounts,
+        revenue: orderMonthRevenue,
+      },
     };
   }
   return res.status(200).json({

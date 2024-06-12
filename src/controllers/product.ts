@@ -36,6 +36,7 @@ export const getAllCategories = TryCatch(async (req, res, next) => {
   if (myCache.has("categories")) {
     categories = JSON.parse(myCache.get("categories")!);
   } else {
+    //distict for retrieve a list of unique category values from the Product collection in MongoDB. 
     categories = await Product.distinct("category");
     myCache.set("categories", JSON.stringify(categories));
   }

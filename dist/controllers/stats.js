@@ -66,7 +66,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
                 $lte: today,
             },
         });
-        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthProducts, lastMonthOrders, lastMonthUsers, productsCount, usersCount, allOrders, sixMonthAgoOrders] = await Promise.all([
+        const [thisMonthProducts, thisMonthOrders, thisMonthUsers, lastMonthProducts, lastMonthOrders, lastMonthUsers, productsCount, usersCount, allOrders, sixMonthAgoOrders, categories,] = await Promise.all([
             thisMonthProductsPromise,
             thisMonthOrdersPromise,
             thisMonthUsersPromise,
@@ -76,7 +76,8 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             Product.countDocuments(),
             User.countDocuments(),
             Order.find({}).select("total"),
-            lastSixMonthOrdersPromise
+            lastSixMonthOrdersPromise,
+            Product.distinct("category"),
         ]);
         const thisMonthRevenue = thisMonthOrders.reduce((total, order) => total + (order.total || 0), 
         //   order: The current order object in the iteration.
@@ -100,29 +101,39 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             revenue,
             user: usersCount,
             product: productsCount,
-            order: allOrders.length
+            order: allOrders.length,
         };
         const orderMonthCounts = new Array(6).fill(0);
         const orderMonthRevenue = new Array(6).fill(0);
-        //for BarChart of home page.. 
+        //for BarChart of home page..
         sixMonthAgoOrders.forEach((order) => {
             const creationDate = order.createdAt;
             const monthDiff = today.getMonth() - creationDate.getMonth();
-            // working flow: createmonth : 10 as per 0 base indexing , today month : 5 => so,  monthDiff = 5, so at 0th index it will be increase by 1 
+            // working flow: createmonth : 10 as per 0 base indexing , today month : 5 => so,  monthDiff = 5, so at 0th index it will be increase by 1
             //if month diffrence less than 6..
             if (monthDiff < 6) {
-                //5 bcz of last index of the oorderMonthCount array. 
+                //5 bcz of last index of the oorderMonthCount array.
                 orderMonthCounts[5 - monthDiff] += 1;
                 orderMonthRevenue[5 - monthDiff] += order.total;
             }
         });
+        //for make key value pair of the categories.
+        const categoriesCountPromise = categories.map((category) => Product.countDocuments({ category }));
+        const categoriesCount = await Promise.all(categoriesCountPromise);
+        const categoryCount = [];
+        categories.forEach((category, i) => {
+            categoryCount.push({
+                [category]: Math.round((categoriesCount[i] / productsCount) * 100),
+            });
+        });
         stats = {
+            categoryCount,
             changePercent,
             count,
             chart: {
                 order: orderMonthCounts,
-                revenue: orderMonthRevenue
-            }
+                revenue: orderMonthRevenue,
+            },
         };
     }
     return res.status(200).json({
