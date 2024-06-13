@@ -8,8 +8,9 @@ import { calculatePercentage } from "../utils/features.js";
 export const getDashboardStats = TryCatch(async (req, res, next) => {
   let stats = {};
 
-  if (myCache.has("admin-stats")) {
-    stats = JSON.parse(myCache.get("admin-stats")!);
+  const key = "admin-stats"
+  if (myCache.has(key)) {
+    stats = JSON.parse(myCache.get(key)!);
   } else {
     const today = new Date(); //here the last day of this month is today obiosly because we can no go to future and make changes in stats.. so from today we can decode the last month
     const sixMonthAgo = new Date();
@@ -88,7 +89,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       productsCount,
       usersCount,
       allOrders,
-      sixMonthAgoOrders,
+      lastSixMonthOrders,
       categories,
       femaleUserCount,
       latestTransaction,
@@ -149,9 +150,9 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
     const orderMonthRevenue = new Array(6).fill(0);
 
     //for BarChart of home page..
-    sixMonthAgoOrders.forEach((order) => {
+    lastSixMonthOrders.forEach((order) => {
       const creationDate = order.createdAt;
-      const monthDiff = today.getMonth() - creationDate.getMonth();
+      const monthDiff = (today.getMonth() - creationDate.getMonth() + 12) % 12;
 
       // working flow: createmonth : 10 as per 0 base indexing , today month : 5 => so,  monthDiff = 5, so at 0th index it will be increase by 1
 
@@ -207,7 +208,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
       latestTransaction: modifiedLatestTransaction,
     };
 
-    myCache.set("admin-stats", JSON.stringify(stats));
+    myCache.set(key, JSON.stringify(stats));
   }
   return res.status(200).json({
     success: true,
@@ -218,23 +219,40 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
 export const getPieCharts = TryCatch(async (req, res, next) => {
   let charts;
 
-  if (myCache.has("admin-pie-charts")) {
-    charts = JSON.parse(myCache.get("admin-pie-charts")!);
+  const key = "admin-pie-charts"
+  if (myCache.has(key)) {
+    charts = JSON.parse(myCache.get(key)!);
   } else {
+    const allOrdersPromise = Order.find({}).select([
+      "total",
+      "discount",
+      "subTotal",
+      "tax",
+      "shippingCharges",
+    ]);
+
     const [
       processingOrder,
       shippedOrder,
       deliveredOrder,
       categories,
       productsCount,
-      productsOutOfStock
+      productsOutOfStock,
+      allOrders,
+      allUsers,
+      adminUsers,
+      customers,
     ] = await Promise.all([
       Order.countDocuments({ status: "Processing" }),
       Order.countDocuments({ status: "Shipped" }),
       Order.countDocuments({ status: "Delivered" }),
       Product.distinct("category"),
       Product.countDocuments(),
-      Product.countDocuments({stock:0}),
+      Product.countDocuments({ stock: 0 }),
+      allOrdersPromise,
+      User.find({}).select(["dob"]), //here use select dob because in age function there are use in dob directly.
+      User.countDocuments({ role: "admin" }),
+      User.countDocuments({ role: "user" }),
     ]);
 
     const orderFullfillmentRatio = {
@@ -259,26 +277,75 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
       });
     });
 
+    //for stock avalability..
 
-    //for stock avalability.. 
+    const stockAvailability = {
+      inStock: productsCount - productsOutOfStock,
+      outOfStock: productsOutOfStock,
+    };
 
-    const stockAvailability ={
-      inStock:productsCount - productsOutOfStock ,
-      outOfStock: productsOutOfStock
-    }
+    const grossIncome = allOrders.reduce(
+      (prev, order) => prev + (order.total || 0),
+      0
+    );
+    const totalDiscount = allOrders.reduce(
+      (prev, order) => prev + (order.discount || 0),
+      0
+    );
+    const productionCost = allOrders.reduce(
+      (prev, order) => prev + (order.shippingCharges || 0),
+      0
+    );
+    const burnt = allOrders.reduce((prev, order) => prev + (order.tax || 0), 0);
+
+    const marketingCost = Math.round(grossIncome * (30 / 100));
+
+    const netMargin =
+      grossIncome - (totalDiscount + productionCost + burnt + marketingCost);
+
+    const revenueDistribution = {
+      netMargin,
+      totalDiscount,
+      productionCost,
+      burnt,
+      marketingCost,
+    };
+
+    const adminCustomer = {
+      admin: adminUsers,
+      customer: customers,
+    };
+
+    const usersAgeGroup = {
+      // access virtual properties directly on an instance of the model USer
+      teen: allUsers.filter((i) => i.age < 20).length,
+      adult: allUsers.filter((i) => i.age >= 20 && i.age < 40).length,
+      old: allUsers.filter((i) => i.age >= 40).length,
+    };
 
     charts = {
       orderFullfillmentRatio,
       categoryCount,
-      stockAvailability
+      stockAvailability,
+      revenueDistribution,
+      adminCustomer,
+      usersAgeGroup,
     };
 
-    myCache.set("admin-pie-charts", JSON.stringify(charts));
+    myCache.set(key, JSON.stringify(charts));
   }
   res.status(200).json({
     success: true,
     charts,
   });
 });
-export const getBarCharts = TryCatch(async (req, res, next) => {});
+export const getBarCharts = TryCatch(async (req, res, next) => {
+  let charts ; 
+  const key = "admin-bar-charts";
+
+  if(myCache.has(key)){
+    //here as string or ! operator bcz the parse expect the string or undefined but if there are has key? so it can not be undefined
+    charts = JSON.parse(myCache.get(key)as string)
+  }
+});
 export const getLineCharts = TryCatch(async (req, res, next) => {});
