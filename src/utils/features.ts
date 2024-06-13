@@ -87,3 +87,29 @@ export const calculatePercentage = (thisMonth: number, lastMonth: number) => {
   const percent = (thisMonth / lastMonth) * 100;
   return Number(percent.toFixed(0));
 };
+
+//because the only Document can not have the value like createdAt
+export interface MyDocument extends Document {
+  createdAt: Date;
+}
+
+type FuncProps = {
+  length: number;
+  docArr: MyDocument[];
+};
+
+//if cant understand then see the function of getLastSixMonth data and store in the array for charts.. in 152 line of Stats.ts
+export const getChartData = ({ length, docArr }: FuncProps) => {
+  const today = new Date();
+  const data: number[] = new Array(length).fill(0);
+
+  docArr.forEach((i) => {
+    const creationDate = i.createdAt;
+    const monthDiff = (today.getMonth() - creationDate.getMonth() + 12) % 12;
+
+    if (monthDiff < length) {
+      data[length - 1 - monthDiff] += 1;
+    }
+  });
+  return data;
+};

@@ -3,12 +3,12 @@ import { TryCatch } from "../middlewares/error.js";
 import { Order } from "../models/order.js";
 import { Product } from "../models/product.js";
 import { User } from "../models/user.js";
-import { calculatePercentage } from "../utils/features.js";
+import { MyDocument, calculatePercentage, getChartData } from "../utils/features.js";
 
 export const getDashboardStats = TryCatch(async (req, res, next) => {
   let stats = {};
 
-  const key = "admin-stats"
+  const key = "admin-stats";
   if (myCache.has(key)) {
     stats = JSON.parse(myCache.get(key)!);
   } else {
@@ -219,7 +219,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
 export const getPieCharts = TryCatch(async (req, res, next) => {
   let charts;
 
-  const key = "admin-pie-charts"
+  const key = "admin-pie-charts";
   if (myCache.has(key)) {
     charts = JSON.parse(myCache.get(key)!);
   } else {
@@ -340,12 +340,59 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
   });
 });
 export const getBarCharts = TryCatch(async (req, res, next) => {
-  let charts ; 
+  let charts;
   const key = "admin-bar-charts";
 
-  if(myCache.has(key)){
+  if (myCache.has(key)) {
     //here as string or ! operator bcz the parse expect the string or undefined but if there are has key? so it can not be undefined
-    charts = JSON.parse(myCache.get(key)as string)
+    charts = JSON.parse(myCache.get(key) as string);
+  } else {
+    const today = new Date();
+    let sixMonthAgo = new Date();
+    sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 6);
+    let twelveMonthAgo = new Date();
+    sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 12);
+
+    const lastSixMonthProductsPromise = Product.find({
+      createdAt: {
+        $gte: sixMonthAgo,
+        $lte: today,
+      },
+    }).select("createdAt");
+
+    const lastSixMonthUsersPromise = User.find({
+      createdAt: {
+        $gte: sixMonthAgo,
+        $lte: today,
+      },
+    }).select(["createdAt"]);
+
+    const lastTwelveMonthOrdersPromise = Order.find({
+      createdAt: {
+        $gte: twelveMonthAgo,
+        $lte: today,
+      },
+    }).select(["createdAt"]);
+
+    const [lastSixMonthProducts, lastSixMonthUsers, lastTwelveMonthOrders] =
+      await Promise.all([
+        lastSixMonthProductsPromise,
+        lastSixMonthUsersPromise,
+        lastTwelveMonthOrdersPromise,
+      ]);
+
+    const productsCount = getChartData({
+      length: 6,
+      docArr: lastSixMonthProducts as MyDocument[]
+    });
+
+    charts = {};
+    myCache.set(key, JSON.stringify(charts));
   }
+
+  res.status(200).json({
+    success: true,
+    charts,
+  });
 });
 export const getLineCharts = TryCatch(async (req, res, next) => {});

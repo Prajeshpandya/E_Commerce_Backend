@@ -3,7 +3,7 @@ import { TryCatch } from "../middlewares/error.js";
 import { Order } from "../models/order.js";
 import { Product } from "../models/product.js";
 import { User } from "../models/user.js";
-import { calculatePercentage } from "../utils/features.js";
+import { calculatePercentage, getChartData } from "../utils/features.js";
 export const getDashboardStats = TryCatch(async (req, res, next) => {
     let stats = {};
     const key = "admin-stats";
@@ -256,5 +256,45 @@ export const getBarCharts = TryCatch(async (req, res, next) => {
         //here as string or ! operator bcz the parse expect the string or undefined but if there are has key? so it can not be undefined
         charts = JSON.parse(myCache.get(key));
     }
+    else {
+        const today = new Date();
+        let sixMonthAgo = new Date();
+        sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 6);
+        let twelveMonthAgo = new Date();
+        sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 12);
+        const lastSixMonthProductsPromise = Product.find({
+            createdAt: {
+                $gte: sixMonthAgo,
+                $lte: today,
+            },
+        }).select("createdAt");
+        const lastSixMonthUsersPromise = User.find({
+            createdAt: {
+                $gte: sixMonthAgo,
+                $lte: today,
+            },
+        }).select(["createdAt"]);
+        const lastTwelveMonthOrdersPromise = Order.find({
+            createdAt: {
+                $gte: twelveMonthAgo,
+                $lte: today,
+            },
+        }).select(["createdAt"]);
+        const [lastSixMonthProducts, lastSixMonthUsers, lastTwelveMonthOrders] = await Promise.all([
+            lastSixMonthProductsPromise,
+            lastSixMonthUsersPromise,
+            lastTwelveMonthOrdersPromise,
+        ]);
+        const productsCount = getChartData({
+            length: 6,
+            docArr: lastSixMonthProducts
+        });
+        charts = {};
+        myCache.set(key, JSON.stringify(charts));
+    }
+    res.status(200).json({
+        success: true,
+        charts,
+    });
 });
 export const getLineCharts = TryCatch(async (req, res, next) => { });
