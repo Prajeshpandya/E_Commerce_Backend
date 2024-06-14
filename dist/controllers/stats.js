@@ -3,7 +3,7 @@ import { TryCatch } from "../middlewares/error.js";
 import { Order } from "../models/order.js";
 import { Product } from "../models/product.js";
 import { User } from "../models/user.js";
-import { calculatePercentage, getChartData } from "../utils/features.js";
+import { calculatePercentage } from "../utils/features.js";
 export const getDashboardStats = TryCatch(async (req, res, next) => {
     let stats = {};
     const key = "admin-stats";
@@ -267,29 +267,36 @@ export const getBarCharts = TryCatch(async (req, res, next) => {
                 $gte: sixMonthAgo,
                 $lte: today,
             },
-        }).select("createdAt");
+        });
         const lastSixMonthUsersPromise = User.find({
             createdAt: {
                 $gte: sixMonthAgo,
                 $lte: today,
             },
-        }).select(["createdAt"]);
+        });
         const lastTwelveMonthOrdersPromise = Order.find({
             createdAt: {
                 $gte: twelveMonthAgo,
                 $lte: today,
             },
-        }).select(["createdAt"]);
+        });
         const [lastSixMonthProducts, lastSixMonthUsers, lastTwelveMonthOrders] = await Promise.all([
             lastSixMonthProductsPromise,
             lastSixMonthUsersPromise,
             lastTwelveMonthOrdersPromise,
         ]);
-        const productsCount = getChartData({
-            length: 6,
-            docArr: lastSixMonthProducts
+        const lastSixMonthProductsCount = new Array(6).fill(0);
+        lastSixMonthProducts.forEach((product) => {
+            const today = new Date();
+            const creationDate = product.createdAt;
+            const monthDiff = today.getMonth() - creationDate.getMonth();
+            if (monthDiff < 6) {
+                lastSixMonthProductsCount[5 - monthDiff] += 1;
+            }
         });
-        charts = {};
+        charts = {
+            product: lastSixMonthProductsCount,
+        };
         myCache.set(key, JSON.stringify(charts));
     }
     res.status(200).json({
