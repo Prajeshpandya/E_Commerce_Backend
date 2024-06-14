@@ -26,7 +26,6 @@ export const getLatestProducts = TryCatch(async (req, res, next) => {
     success: "true",
     products,
   });
-  
 });
 
 // Revalidate on New,Update,Delete & New Order!
@@ -36,7 +35,7 @@ export const getAllCategories = TryCatch(async (req, res, next) => {
   if (myCache.has("categories")) {
     categories = JSON.parse(myCache.get("categories")!);
   } else {
-    //distict for retrieve a list of unique category values from the Product collection in MongoDB. 
+    //distict for retrieve a list of unique category values from the Product collection in MongoDB.
     categories = await Product.distinct("category");
     myCache.set("categories", JSON.stringify(categories));
   }
@@ -67,7 +66,7 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
   let product;
   const id = req.params.id;
   if (myCache.has(`product-${id}`)) {
-    product = JSON.parse(myCache.get(`product-${id}`)!);       //we can get data in parse form only !
+    product = JSON.parse(myCache.get(`product-${id}`)!); //we can get data in parse form only !
   } else {
     product = await Product.findById(id);
     if (!product) return next(new ErrorHandler("Product Not Found!", 404));
@@ -99,7 +98,7 @@ export const newProduct = TryCatch(
       photo: photo.path,
     });
 
-    await inValidateCache({ product: true });
+    inValidateCache({ product: true, admin: true });
 
     return res.status(201).json({
       success: "true",
@@ -131,8 +130,11 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   if (category) product.category = category;
 
   await product.save();
-  await inValidateCache({ product: true,productId:String(product._id) });
-
+  inValidateCache({
+    product: true,
+    productId: String(product._id),
+    admin: true,
+  });
 
   return res.status(200).json({
     success: "true",
@@ -149,7 +151,11 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
   rm(product.photo!, () => console.log("Product Photo Deleted"));
 
   await Product.deleteOne();
-  await inValidateCache({ product: true,productId:String(product._id) });
+  inValidateCache({
+    product: true,
+    productId: String(product._id),
+    admin: true,
+  });
 
   return res.status(200).json({
     success: "true",

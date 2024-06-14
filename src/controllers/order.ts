@@ -102,7 +102,7 @@ export const newOrder = TryCatch(
     await reduceStock(orderItems);
 
     //create the perticular user's order so we need to revalidate that. so we pass the userId of the user and revalidate the keys.
-    await inValidateCache({
+    inValidateCache({
       product: true,
       order: true,
       admin: true,
@@ -143,7 +143,7 @@ export const processOrder = TryCatch(async (req, res, next) => {
 
   //here admin update the order so not necessory that he update the order of self, so it can be update the other's order so we have to specify the id of that perticular user from the order itself
 
-  await inValidateCache({
+  inValidateCache({
     product: false,
     order: true,
     admin: true,
@@ -166,7 +166,7 @@ export const deleteOrder = TryCatch(async (req, res, next) => {
   await order.deleteOne();
 
   //here admin update the order so not necessory that he update the order of self, so it can be update the other's order so we have to specify the id of that perticular user from the order itself
-  await inValidateCache({
+  inValidateCache({
     product: false,
     order: true,
     admin: true,

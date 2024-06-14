@@ -26,7 +26,7 @@ export const getAllCategories = TryCatch(async (req, res, next) => {
         categories = JSON.parse(myCache.get("categories"));
     }
     else {
-        //distict for retrieve a list of unique category values from the Product collection in MongoDB. 
+        //distict for retrieve a list of unique category values from the Product collection in MongoDB.
         categories = await Product.distinct("category");
         myCache.set("categories", JSON.stringify(categories));
     }
@@ -83,7 +83,7 @@ export const newProduct = TryCatch(async (req, res, next) => {
         category: category.toLowerCase(),
         photo: photo.path,
     });
-    await inValidateCache({ product: true });
+    inValidateCache({ product: true, admin: true });
     return res.status(201).json({
         success: "true",
         message: "Product created successfully",
@@ -111,7 +111,11 @@ export const updateProduct = TryCatch(async (req, res, next) => {
     if (category)
         product.category = category;
     await product.save();
-    await inValidateCache({ product: true, productId: String(product._id) });
+    inValidateCache({
+        product: true,
+        productId: String(product._id),
+        admin: true,
+    });
     return res.status(200).json({
         success: "true",
         message: "Product Updated successfully",
@@ -124,7 +128,11 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
         return next(new ErrorHandler("Product Not Found!", 404));
     rm(product.photo, () => console.log("Product Photo Deleted"));
     await Product.deleteOne();
-    await inValidateCache({ product: true, productId: String(product._id) });
+    inValidateCache({
+        product: true,
+        productId: String(product._id),
+        admin: true,
+    });
     return res.status(200).json({
         success: "true",
         message: "Product Deleted successfully",

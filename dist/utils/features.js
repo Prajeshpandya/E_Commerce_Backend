@@ -9,7 +9,7 @@ export const connDb = (uri) => {
     })
         .catch((e) => console.log(e));
 };
-export const inValidateCache = async ({ product, order, admin, userId, orderId, productId, }) => {
+export const inValidateCache = ({ product, order, admin, userId, orderId, productId, }) => {
     if (product) {
         const productKeys = [
             "latest-products",
@@ -47,6 +47,12 @@ export const inValidateCache = async ({ product, order, admin, userId, orderId, 
         myCache.del(orderKeys);
     }
     if (admin) {
+        myCache.del([
+            "admin-line-charts",
+            "admin-bar-charts",
+            "admin-pie-charts",
+            "admin-stats",
+        ]);
     }
 };
 export const reduceStock = async (orderItems) => {
@@ -73,7 +79,7 @@ export const getChartData = ({ length, docArr }) => {
         const creationDate = i.createdAt;
         const monthDiff = (today.getMonth() - creationDate.getMonth() + 12) % 12;
         if (monthDiff < length) {
-            data[(length - 1) - monthDiff] += 1;
+            data[length - 1 - monthDiff] += 1;
         }
     });
     return data;

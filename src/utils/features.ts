@@ -12,7 +12,7 @@ export const connDb = (uri: string) => {
     .catch((e) => console.log(e));
 };
 
-export const inValidateCache = async ({
+export const inValidateCache =  ({
   product,
   order,
   admin,
@@ -67,6 +67,12 @@ export const inValidateCache = async ({
     myCache.del(orderKeys);
   }
   if (admin) {
+    myCache.del([
+      "admin-line-charts",
+      "admin-bar-charts",
+      "admin-pie-charts",
+      "admin-stats",
+    ]);
   }
 };
 
@@ -89,7 +95,7 @@ export const calculatePercentage = (thisMonth: number, lastMonth: number) => {
 };
 
 //because the only Document can not have the value like createdAt
- export interface MyDocument extends Document {
+export interface MyDocument extends Document {
   createdAt: Date;
 }
 
@@ -108,7 +114,7 @@ export const getChartData = ({ length, docArr }: FuncProps) => {
     const monthDiff = (today.getMonth() - creationDate.getMonth() + 12) % 12;
 
     if (monthDiff < length) {
-      data[(length - 1 )- monthDiff] += 1;
+      data[length - 1 - monthDiff] += 1;
     }
   });
   return data;

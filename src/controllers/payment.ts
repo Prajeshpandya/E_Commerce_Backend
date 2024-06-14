@@ -38,15 +38,14 @@ export const allCoupons = TryCatch(async (req, res, next) => {
   });
 });
 export const deleteCoupon = TryCatch(async (req, res, next) => {
-    const {id} = req.params;
+  const { id } = req.params;
 
   const coupon = await Coupon.findByIdAndDelete(id);
 
-  if(!coupon) return next(new ErrorHandler("Coupon is not exist",404))
+  if (!coupon) return next(new ErrorHandler("Coupon is not exist", 404));
 
   return res.status(200).json({
     success: true,
-    message:`Coupon ${coupon.code} Deleted Successfully`,
+    message: `Coupon ${coupon.code} Deleted Successfully`,
   });
-  
 });

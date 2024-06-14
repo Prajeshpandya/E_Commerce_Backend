@@ -261,31 +261,33 @@ export const getBarCharts = TryCatch(async (req, res, next) => {
         let sixMonthAgo = new Date();
         sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 6);
         let twelveMonthAgo = new Date();
-        sixMonthAgo.setMonth(sixMonthAgo.getMonth() - 12);
+        twelveMonthAgo.setMonth(twelveMonthAgo.getMonth() - 12);
         const lastSixMonthProductsPromise = Product.find({
             createdAt: {
                 $gte: sixMonthAgo,
                 $lte: today,
             },
-        });
+        }).select("createdAt");
         const lastSixMonthUsersPromise = User.find({
             createdAt: {
                 $gte: sixMonthAgo,
                 $lte: today,
             },
-        });
+        }).select("createdAt");
         const lastTwelveMonthOrdersPromise = Order.find({
             createdAt: {
                 $gte: twelveMonthAgo,
                 $lte: today,
             },
-        });
+        }).select("createdAt");
         const [lastSixMonthProducts, lastSixMonthUsers, lastTwelveMonthOrders] = await Promise.all([
             lastSixMonthProductsPromise,
             lastSixMonthUsersPromise,
             lastTwelveMonthOrdersPromise,
         ]);
         const lastSixMonthProductsCount = new Array(6).fill(0);
+        const lastSixMonthUsersCount = new Array(6).fill(0);
+        const lastTwelveMonthOrdersCount = new Array(12).fill(0);
         lastSixMonthProducts.forEach((product) => {
             const today = new Date();
             const creationDate = product.createdAt;
@@ -294,8 +296,26 @@ export const getBarCharts = TryCatch(async (req, res, next) => {
                 lastSixMonthProductsCount[5 - monthDiff] += 1;
             }
         });
+        lastSixMonthUsers.forEach((user) => {
+            const today = new Date();
+            const creationDate = user.createdAt;
+            const monthDiff = today.getMonth() - creationDate.getMonth();
+            if (monthDiff < 6) {
+                lastSixMonthUsersCount[5 - monthDiff] += 1;
+            }
+        });
+        lastTwelveMonthOrders.forEach((order) => {
+            const today = new Date();
+            const creationDate = order.createdAt;
+            const monthDiff = today.getMonth() - creationDate.getMonth();
+            if (monthDiff < 12) {
+                lastTwelveMonthOrdersCount[11 - monthDiff] += 1;
+            }
+        });
         charts = {
             product: lastSixMonthProductsCount,
+            user: lastSixMonthUsersCount,
+            order: lastTwelveMonthOrdersCount,
         };
         myCache.set(key, JSON.stringify(charts));
     }
@@ -304,4 +324,74 @@ export const getBarCharts = TryCatch(async (req, res, next) => {
         charts,
     });
 });
-export const getLineCharts = TryCatch(async (req, res, next) => { });
+export const getLineCharts = TryCatch(async (req, res, next) => {
+    let charts;
+    const key = "admin-line-charts";
+    if (myCache.has(key)) {
+        //here as string or ! operator bcz the parse expect the string or undefined but if there are has key? so it can not be undefined
+        charts = JSON.parse(myCache.get(key));
+    }
+    else {
+        const today = new Date();
+        let twelveMonthAgo = new Date();
+        twelveMonthAgo.setMonth(twelveMonthAgo.getMonth() - 12);
+        const baseQuery = {
+            createdAt: {
+                $gte: twelveMonthAgo,
+                $lte: today,
+            },
+        };
+        const [lastTwelveMonthProducts, lastTwelveMonthUsers, lastTwelveMonthOrders,] = await Promise.all([
+            Product.find(baseQuery).select("createdAt"),
+            User.find(baseQuery).select("createdAt"),
+            Order.find(baseQuery),
+        ]);
+        const lastTwelveMonthProductsCount = new Array(12).fill(0);
+        const lastTwelveMonthUsersCount = new Array(12).fill(0);
+        const lastTwelveMonthRevenueCount = new Array(12).fill(0);
+        const lastTwelveMonthDiscountCount = new Array(12).fill(0);
+        lastTwelveMonthProducts.forEach((product) => {
+            const today = new Date();
+            const creationDate = product.createdAt;
+            const monthDiff = today.getMonth() - creationDate.getMonth();
+            if (monthDiff < 12) {
+                lastTwelveMonthProductsCount[11 - monthDiff] += 1;
+            }
+        });
+        lastTwelveMonthUsers.forEach((user) => {
+            const today = new Date();
+            const creationDate = user.createdAt;
+            const monthDiff = today.getMonth() - creationDate.getMonth();
+            if (monthDiff < 12) {
+                lastTwelveMonthUsersCount[11 - monthDiff] += 1;
+            }
+        });
+        lastTwelveMonthOrders.forEach((order) => {
+            const today = new Date();
+            const creationDate = order.createdAt;
+            const monthDiff = today.getMonth() - creationDate.getMonth();
+            if (monthDiff < 12) {
+                lastTwelveMonthRevenueCount[11 - monthDiff] += order.total;
+            }
+        });
+        lastTwelveMonthOrders.forEach((order) => {
+            const today = new Date();
+            const creationDate = order.createdAt;
+            const monthDiff = today.getMonth() - creationDate.getMonth();
+            if (monthDiff < 12) {
+                lastTwelveMonthDiscountCount[11 - monthDiff] += order.discount;
+            }
+        });
+        charts = {
+            product: lastTwelveMonthProductsCount,
+            user: lastTwelveMonthUsersCount,
+            discount: lastTwelveMonthDiscountCount,
+            revenue: lastTwelveMonthRevenueCount
+        };
+        myCache.set(key, JSON.stringify(charts));
+    }
+    res.status(200).json({
+        success: true,
+        charts,
+    });
+});
