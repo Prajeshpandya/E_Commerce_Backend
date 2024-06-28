@@ -19,6 +19,7 @@ const port = process.env.PORT || 5000;
 const mongo_uri = process.env.MONGO_URI || "";
 const stripeKey = process.env.STRIPE_KEY || "";
 connDb(mongo_uri);
+//make sure this instance created before the myCache. 
 export const stripe = new Stripe(stripeKey);
 export const myCache = new NodeCache();
 app.use(express.json());

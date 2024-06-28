@@ -20,7 +20,7 @@ export const inValidateCache = ({ product, order, admin, userId, orderId, produc
             productKeys.push(`product-${productId}`);
         }
         if (typeof productId === "object") {
-            productKeys.forEach((i) => productKeys.push(`product-${i}`));
+            productId.forEach((i) => productKeys.push(`product-${i}`));
             console.log("working");
         }
         // const products = await Product.find({}).select("_id");

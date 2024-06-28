@@ -32,7 +32,7 @@ export const inValidateCache =  ({
     }
 
     if (typeof productId === "object") {
-      productKeys.forEach((i) => productKeys.push(`product-${i}`));
+      productId.forEach((i) => productKeys.push(`product-${i}`));
       console.log("working");
     }
 
