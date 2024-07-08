@@ -5,6 +5,7 @@ import NodeCache from "node-cache";
 import { config } from "dotenv";
 import morgan from "morgan";
 import Stripe from "stripe";
+import cors from "cors";
 //Importing Routes
 import userRoute from "./routes/user.js";
 import productRoute from "./routes/product.js";
@@ -24,6 +25,13 @@ export const stripe = new Stripe(stripeKey);
 export const myCache = new NodeCache();
 app.use(express.json());
 app.use(morgan("dev"));
+app.use(cors({
+    origin: process.env.FRONTEND_URL || "*", //we can give specific domain , that only take accept the request from that specific domain
+    methods: ["GET", "PUT", "DELETE", "POST", "PATCH"],
+    credentials: true, //for get header details like cookie...
+    allowedHeaders: ["Content-Type", "Authorization"],
+}));
+app.use("/uploads", express.static("uploads"));
 //using Routes
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/product", productRoute);
@@ -34,7 +42,7 @@ app.use("/", (req, res, next) => {
     res.send("API is Working with /api/v1 !");
 });
 // for get the data/photo from the uploads folder
-app.use("/uploads", express.static("uploads"));
+// app.use("/uploads", express.static("uploads"));
 app.use(errorMiddleware);
 app.listen(5000, () => {
     console.log(`Express is working on http://localhost:${port}`);
