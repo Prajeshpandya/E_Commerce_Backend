@@ -70,6 +70,8 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
 export const newProduct = TryCatch(async (req, res, next) => {
     const { name, price, stock, category } = req.body;
     const photo = req.file;
+    if (price < 1)
+        return next(new ErrorHandler("Price should be more than 0", 400));
     if (!photo)
         return next(new ErrorHandler("Please Add Photo ", 400));
     if (!name || !price || !stock || !category) {
@@ -127,7 +129,7 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
     if (!product)
         return next(new ErrorHandler("Product Not Found!", 404));
     rm(product.photo, () => console.log("Product Photo Deleted"));
-    await Product.deleteOne();
+    await product.deleteOne();
     inValidateCache({
         product: true,
         productId: String(product._id),

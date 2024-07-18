@@ -84,7 +84,8 @@ export const newProduct = TryCatch(
   async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
     const { name, price, stock, category } = req.body;
     const photo = req.file;
-
+    if (price < 1)
+      return next(new ErrorHandler("Price should be more than 0", 400));
     if (!photo) return next(new ErrorHandler("Please Add Photo ", 400));
     if (!name || !price || !stock || !category) {
       rm(photo.path, () => console.log("deleted"));
@@ -150,7 +151,7 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
 
   rm(product.photo!, () => console.log("Product Photo Deleted"));
 
-  await Product.deleteOne();
+  await product.deleteOne();
   inValidateCache({
     product: true,
     productId: String(product._id),
