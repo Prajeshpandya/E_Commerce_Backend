@@ -78,11 +78,11 @@ export const newOrder = TryCatch(
       !shippingInfo ||
       !orderItems ||
       !user ||
-      !subTotal ||
-      !discount ||
-      !total ||
-      !shippingCharges ||
-      !tax
+      subTotal === undefined ||
+      discount === undefined ||
+      total === undefined ||
+      shippingCharges === undefined ||
+      tax === undefined
     )
       return next(
         new ErrorHandler("Please add the all valid Credentials!", 400)

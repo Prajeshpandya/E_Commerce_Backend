@@ -56,11 +56,11 @@ export const newOrder = TryCatch(async (req, res, next) => {
     if (!shippingInfo ||
         !orderItems ||
         !user ||
-        !subTotal ||
-        !discount ||
-        !total ||
-        !shippingCharges ||
-        !tax)
+        subTotal === undefined ||
+        discount === undefined ||
+        total === undefined ||
+        shippingCharges === undefined ||
+        tax === undefined)
         return next(new ErrorHandler("Please add the all valid Credentials!", 400));
     const order = await Order.create({
         shippingInfo,
