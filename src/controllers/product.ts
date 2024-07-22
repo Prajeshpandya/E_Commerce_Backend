@@ -169,7 +169,7 @@ export const getAllProducts = TryCatch(
     const { search, sort, category, price } = req.query;
 
     const page = Number(req.query.page) || 1;
-    const limit = Number(process.env.PRODUCT_PER_PAGE) || 8;
+    const limit = Number(process.env.PRODUCT_PER_PAGE) || 5;
     const skip = (page - 1) * limit; //example page 2 and limit 8; so at the page number 2 the first 8 product are skipped!
 
     const baseQuery: BaseQuery = {};
