@@ -261,19 +261,23 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
       delivered: deliveredOrder,
     };
 
-    const categoriesCountPromise = categories.map((category) =>
-      Product.countDocuments({ category })
+    const categoriesStockPromise = categories.map((category) =>
+      Product.find({ category }).select("stock")
     );
 
     //did promise.all because for every category it awaits and also have to made the function async .
-    const categoriesCount = await Promise.all(categoriesCountPromise);
+    const categoriesStock = await Promise.all(categoriesStockPromise);
+    console.log(categoriesStock);
+    const categoryStockCount: Record<string, number>[] = [];
 
-    const categoryCount: Record<string, number>[] = [];
-
-    //Without the square brackets, category would be interpreted as a literal property name, not a variable.
+    // Without the square brackets, category would be interpreted as a literal property name, not a variable.
     categories.forEach((category, i) => {
-      categoryCount.push({
-        [category]: Math.round((categoriesCount[i] / productsCount) * 100),
+      const totalStock = categoriesStock[i].reduce(
+        (sum, product) => sum + product.stock,
+        0
+      );
+      categoryStockCount.push({
+        [category]: totalStock,
       });
     });
 
@@ -325,7 +329,7 @@ export const getPieCharts = TryCatch(async (req, res, next) => {
 
     charts = {
       orderFullfillmentRatio,
-      categoryCount,
+      categoryStockCount,
       stockAvailability,
       revenueDistribution,
       adminCustomer,
