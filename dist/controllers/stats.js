@@ -144,7 +144,7 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             _id: i._id,
             discount: i.discount,
             amount: i.total,
-            quantity: i.orderItems.length,
+            quantity: i.orderItems.map((i) => i.quantity),
             status: i.status,
         }));
         stats = {
@@ -386,7 +386,7 @@ export const getLineCharts = TryCatch(async (req, res, next) => {
             product: lastTwelveMonthProductsCount,
             user: lastTwelveMonthUsersCount,
             discount: lastTwelveMonthDiscountCount,
-            revenue: lastTwelveMonthRevenueCount
+            revenue: lastTwelveMonthRevenueCount,
         };
         myCache.set(key, JSON.stringify(charts));
     }
