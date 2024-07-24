@@ -10,11 +10,11 @@ export const createPaymentIntent = TryCatch(async (req, res, next) => {
         amount: Number(amount * 100), //the get amount always it understand as a paisa so we have to make it rupee
         currency: "inr",
         description: `Order for ${req.body.name}`, // Include the description here
-        metadata: { integration_check: 'accept_a_payment' },
+        metadata: { integration_check: "accept_a_payment" },
     });
     return res.status(201).json({
         success: "true",
-        clientSecret: paymentIntent.client_secret
+        clientSecret: paymentIntent.client_secret,
     });
 });
 export const newCoupon = TryCatch(async (req, res, next) => {
@@ -24,7 +24,7 @@ export const newCoupon = TryCatch(async (req, res, next) => {
     await Coupon.create({ code: coupon, amount });
     return res.status(201).json({
         success: "true",
-        message: `Coupon ${coupon} Created Successfully!`,
+        message: `Coupon ${coupon} with Amount ${amount} Created Successfully!`,
     });
 });
 export const applyDiscount = TryCatch(async (req, res, next) => {
