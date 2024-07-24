@@ -124,14 +124,23 @@ export const getDashboardStats = TryCatch(async (req, res, next) => {
             }
         });
         //for make key value pair of the categories.
-        const categoriesCountPromise = categories.map((category) => Product.countDocuments({ category }));
+        const categoriesStockPromise = categories.map((category) => Product.find({ category }).select("stock"));
         //did promise.all because for every category it awaits and also have to made the function async .
-        const categoriesCount = await Promise.all(categoriesCountPromise);
+        const categoriesCount = await Promise.all(categoriesStockPromise);
+        console.log(categoriesCount);
+        let totalStock = 0;
+        for (let i = 0; i < categoriesCount.length; i++) {
+            const total = categoriesCount[i].reduce((total, stock) => total + stock.stock, 0);
+            totalStock += total || 0;
+        }
+        // console.log("totalStock" + totalStock);
         const categoryCount = [];
         //Without the square brackets, category would be interpreted as a literal property name, not a variable.
         categories.forEach((category, i) => {
+            const stock = categoriesCount[i].reduce((total, stock) => total + stock.stock, 0);
+            const percentage = (stock / totalStock) * 100;
             categoryCount.push({
-                [category]: Math.round((categoriesCount[i] / productsCount) * 100),
+                [category]: parseFloat(percentage.toFixed(1)),
             });
         });
         //ration of men & women..
