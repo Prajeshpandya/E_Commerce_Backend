@@ -10,6 +10,9 @@ import ErrorHandler from "../utils/utilityClass.js";
 import { rm } from "fs";
 import { myCache } from "../app.js";
 import { inValidateCache } from "../utils/features.js";
+import { Reviews } from "../models/reviews.js";
+import { User } from "../models/user.js";
+import { error } from "console";
 
 // Revalidate on New,Update,Delete & New Order!
 export const getLatestProducts = TryCatch(async (req, res, next) => {
@@ -208,6 +211,66 @@ export const getAllProducts = TryCatch(
     });
   }
 );
+
+export const newReview = TryCatch(async (req, res, next) => {
+  const { comment, rating } = req.body;
+  const { productId, userId } = req.query;
+
+  if (!comment) return next(new ErrorHandler("Please Fill Comment!", 400));
+  if (!rating) return next(new ErrorHandler("Please Fill Rating!", 400));
+  if (!productId) return next(new ErrorHandler("Please Fill productId!", 400));
+  if (!userId) return next(new ErrorHandler("Please Fill userId!", 400));
+
+  const user = await User.findById(userId);
+  const product = await Product.findById(productId);
+
+  if (!user) return next(new ErrorHandler("User not Found", 404));
+  if (!product) return next(new ErrorHandler("Product not Found", 404));
+
+  await Reviews.create({
+    comment,
+    rating,
+    user: userId,
+    product: productId,
+  });
+
+  const productWithReview = await Product.findById(productId);
+
+  if (!productWithReview) throw new Error("not found");
+
+  productWithReview.numOfReviews = productWithReview.numOfReviews + 1;
+
+  await productWithReview.save();
+
+  const reviews = await Reviews.find({ product: productId }).select(["rating"]);
+
+  if (reviews.length === 0)
+    return next(new ErrorHandler("Review not found!!", 400));
+
+  const totalRatings = reviews.reduce(
+    (total, review) => total + review.rating || 0,
+    0
+  );
+
+  const average = totalRatings / productWithReview.numOfReviews;
+
+  console.log(average);
+
+  productWithReview.ratings = average;
+
+  productWithReview.save();
+
+  inValidateCache({
+    product: true,
+    productId: String(productId),
+    admin: true,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: "Review added Successfully!!",
+  });
+});
 
 // const generateRandomProducts = async (count: number = 10) => {
 //   const products = [];
