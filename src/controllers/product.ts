@@ -85,14 +85,14 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
 
 export const newProduct = TryCatch(
   async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
-    const { name, price, stock, category } = req.body;
+    const { name, price, stock, category,description } = req.body;
     const photo = req.file;
     if (price < 1)
       return next(new ErrorHandler("Price should be more than 0", 400));
     if (!photo) return next(new ErrorHandler("Please Add Photo ", 400));
-    if (!name || !price || !stock || !category) {
+    if (!name || !price || !stock || !category || !description) {
       rm(photo.path, () => console.log("deleted"));
-      return next(new ErrorHandler("Please enter all fields  ", 400));
+      return next(new ErrorHandler("Please enter all fields!", 400));
     }
     await Product.create({
       name,
@@ -100,6 +100,7 @@ export const newProduct = TryCatch(
       stock,
       category: category.toLowerCase(),
       photo: photo.path,
+      description
     });
 
     inValidateCache({ product: true, admin: true });
@@ -115,7 +116,7 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   //here change controller type req to any.. for pass id to string! or do directly bcz here not all field is required
 
   const { id } = req.params;
-  const { name, price, stock, category } = req.body;
+  const { name, price, stock, category,description } = req.body;
   const photo = req.file;
 
   const product = await Product.findById(id);
@@ -132,6 +133,7 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   if (price) product.price = price;
   if (stock) product.stock = stock;
   if (category) product.category = category;
+  if (description) product.description = description;
 
   await product.save();
   inValidateCache({
