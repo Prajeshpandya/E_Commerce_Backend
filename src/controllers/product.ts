@@ -12,7 +12,6 @@ import { myCache } from "../app.js";
 import { inValidateCache } from "../utils/features.js";
 import { Reviews } from "../models/reviews.js";
 import { User } from "../models/user.js";
-import { error } from "console";
 
 // Revalidate on New,Update,Delete & New Order!
 export const getLatestProducts = TryCatch(async (req, res, next) => {
