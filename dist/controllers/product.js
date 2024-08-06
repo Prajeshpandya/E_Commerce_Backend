@@ -86,7 +86,7 @@ export const newProduct = TryCatch(async (req, res, next) => {
         stock,
         category: category.toLowerCase(),
         photo: photo.path,
-        description
+        description,
     });
     inValidateCache({ product: true, admin: true });
     return res.status(201).json({
@@ -222,6 +222,16 @@ export const newReview = TryCatch(async (req, res, next) => {
     res.status(201).json({
         success: true,
         message: "Review added Successfully!!",
+    });
+});
+export const getReviews = TryCatch(async (req, res, next) => {
+    const { productId } = req.query;
+    if (!productId)
+        return next(new ErrorHandler("Please Provide ProductId ", 400));
+    const reviews = await Reviews.find({ product: productId });
+    res.status(201).json({
+        success: true,
+        reviews,
     });
 });
 // const generateRandomProducts = async (count: number = 10) => {

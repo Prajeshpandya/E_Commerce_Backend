@@ -84,7 +84,7 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
 
 export const newProduct = TryCatch(
   async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
-    const { name, price, stock, category,description } = req.body;
+    const { name, price, stock, category, description } = req.body;
     const photo = req.file;
     if (price < 1)
       return next(new ErrorHandler("Price should be more than 0", 400));
@@ -99,7 +99,7 @@ export const newProduct = TryCatch(
       stock,
       category: category.toLowerCase(),
       photo: photo.path,
-      description
+      description,
     });
 
     inValidateCache({ product: true, admin: true });
@@ -115,7 +115,7 @@ export const updateProduct = TryCatch(async (req, res, next) => {
   //here change controller type req to any.. for pass id to string! or do directly bcz here not all field is required
 
   const { id } = req.params;
-  const { name, price, stock, category,description } = req.body;
+  const { name, price, stock, category, description } = req.body;
   const photo = req.file;
 
   const product = await Product.findById(id);
@@ -270,6 +270,20 @@ export const newReview = TryCatch(async (req, res, next) => {
   res.status(201).json({
     success: true,
     message: "Review added Successfully!!",
+  });
+});
+
+export const getReviews = TryCatch(async (req, res, next) => {
+  const { productId } = req.query;
+
+  if (!productId)
+    return next(new ErrorHandler("Please Provide ProductId ", 400));
+
+  const reviews = await Reviews.find({product: productId });
+
+  res.status(201).json({
+    success: true,
+    reviews,
   });
 });
 

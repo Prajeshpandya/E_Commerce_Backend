@@ -9,6 +9,7 @@ import {
   deleteProduct,
   getAllProducts,
   newReview,
+  getReviews,
 } from "../controllers/product.js";
 import { singleUpload } from "../middlewares/multer.js";
 import { adminOnly } from "../middlewares/adminOnly.js";
@@ -23,6 +24,7 @@ router.get("/all", getAllProducts);
 router.get("/categories", getAllCategories);
 router.get("/admin-products", adminOnly, getAdminProducts);
 router.post("/newreview", newReview);
+router.get("/getreviews", getReviews);
 router
   .route("/:id")
   .get(getSingleProduct)
