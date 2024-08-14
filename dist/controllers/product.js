@@ -228,7 +228,10 @@ export const getReviews = TryCatch(async (req, res, next) => {
     const { productId } = req.query;
     if (!productId)
         return next(new ErrorHandler("Please Provide ProductId ", 400));
-    const reviews = await Reviews.find({ product: productId });
+    const reviews = await Reviews.find({ product: productId }).populate({
+        path: "user",
+        select: "name",
+    });
     res.status(201).json({
         success: true,
         reviews,
