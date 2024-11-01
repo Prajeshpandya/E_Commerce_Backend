@@ -5,9 +5,8 @@ import NodeCache from "node-cache";
 import { config } from "dotenv";
 import morgan from "morgan";
 import Stripe from "stripe";
-import cors from "cors"; 
-import path from "path"; 
-
+import cors from "cors";
+import path from "path";
 
 //Importing Routes
 import userRoute from "./routes/user.js";
@@ -30,13 +29,13 @@ const stripeKey = process.env.STRIPE_KEY || "";
 
 connDb(mongo_uri);
 
-//make sure this instance created before the myCache. 
+//make sure this instance created before the myCache.
 export const stripe = new Stripe(stripeKey);
 
 export const myCache = new NodeCache();
 
 app.use(express.json());
-app.use(morgan("dev"));
+app.use(morgan('combined'))
 
 app.use(
   cors({

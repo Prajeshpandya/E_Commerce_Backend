@@ -20,11 +20,11 @@ const port = process.env.PORT || 5000;
 const mongo_uri = process.env.MONGO_URI || "";
 const stripeKey = process.env.STRIPE_KEY || "";
 connDb(mongo_uri);
-//make sure this instance created before the myCache. 
+//make sure this instance created before the myCache.
 export const stripe = new Stripe(stripeKey);
 export const myCache = new NodeCache();
 app.use(express.json());
-app.use(morgan("dev"));
+app.use(morgan('combined'));
 app.use(cors({
     origin: process.env.FRONTEND_URL || "*", //we can give specific domain , that only take accept the request from that specific domain
     methods: ["GET", "PUT", "DELETE", "POST", "PATCH"],
