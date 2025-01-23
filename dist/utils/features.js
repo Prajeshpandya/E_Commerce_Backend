@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { Product } from "../models/product.js";
 import { myCache } from "../app.js";
+import { v2 as cloudinary } from "cloudinary";
 export const connDb = (uri) => {
     mongoose
         .connect(uri, { dbName: "E-Commerce" })
@@ -83,4 +84,29 @@ export const getChartData = ({ length, docArr }) => {
         }
     });
     return data;
+};
+const getBase64 = (file) => `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+export const uploadToCloudinary = async (files) => {
+    // for single 
+    // const result = await cloudinary.uploader.upload(getBase64(files[0]))
+    // const promises = []
+    // for (let i = 0; i < files.length; i++) {
+    //   const element = files[i];
+    //   promises.push(cloudinary.uploader.upload(getBase64(element))) 
+    // }
+    // return await Promise.all(promises)
+    const promises = files.map(async (file) => {
+        return new Promise((resolve, reject) => {
+            cloudinary.uploader.upload(getBase64(file), (error, result) => {
+                if (error)
+                    return reject(error);
+                resolve(result);
+            });
+        });
+    });
+    const result = await Promise.all(promises);
+    return result.map((i) => ({
+        public_id: i.public_id,
+        url: i.secure_url
+    }));
 };

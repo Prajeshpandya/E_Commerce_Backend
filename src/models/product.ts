@@ -1,3 +1,4 @@
+import { url } from "inspector";
 import mongoose from "mongoose";
 
 const schema = new mongoose.Schema(
@@ -6,24 +7,32 @@ const schema = new mongoose.Schema(
       type: String,
       required: [true, "Please enter name"],
     },
-    photo:{
+    photos: [{
+      public_id: {
         type: String,
-        required: [true, "Please enter photo"],
-    },
-    price:{
-        type: Number,
-        required: [true, "Please enter price"],
-    },
-    stock:{
-        type: Number,
-        required: [true, "Please enter photo"],
-    },
-    category:{
+        required: [true, "Please enter Public ID"]
+
+      },
+      url: {
         type: String,
-        required: [true, "Please enter product category"],
-        trim:true
+        required: [true, "Please enter URL"]
+
+      }
+    }],
+    price: {
+      type: Number,
+      required: [true, "Please enter price"],
     },
-    
+    stock: {
+      type: Number,
+      required: [true, "Please enter photo"],
+    },
+    category: {
+      type: String,
+      required: [true, "Please enter product category"],
+      trim: true
+    },
+
     description: {
       type: String,
       required: [true, "Please enter Description"],

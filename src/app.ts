@@ -7,6 +7,7 @@ import morgan from "morgan";
 import Stripe from "stripe";
 import cors from "cors";
 import path from "path";
+import { v2 as cloudinary } from "cloudinary";
 
 //Importing Routes
 import userRoute from "./routes/user.js";
@@ -28,6 +29,12 @@ const stripeKey = process.env.STRIPE_KEY || "";
 
 
 connDb(mongo_uri);
+
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME ,
+  api_key:process.env.CLOUD_API_KEY ,
+  api_secret: process.env.CLOUD_API_SECRET
+})
 
 //make sure this instance created before the myCache.
 export const stripe = new Stripe(stripeKey);

@@ -9,7 +9,7 @@ import { Product } from "../models/product.js";
 import ErrorHandler from "../utils/utilityClass.js";
 import { rm } from "fs";
 import { myCache } from "../app.js";
-import { inValidateCache } from "../utils/features.js";
+import { inValidateCache, uploadToCloudinary } from "../utils/features.js";
 import { Reviews } from "../models/reviews.js";
 import { User } from "../models/user.js";
 
@@ -85,20 +85,30 @@ export const getSingleProduct = TryCatch(async (req, res, next) => {
 export const newProduct = TryCatch(
   async (req: Request<{}, {}, NewProductRequestBody>, res, next) => {
     const { name, price, stock, category, description } = req.body;
-    const photo = req.file;
+    const photos = req.files as Express.Multer.File[] || undefined;
     if (price < 1)
       return next(new ErrorHandler("Price should be more than 0", 400));
-    if (!photo) return next(new ErrorHandler("Please Add Photo ", 400));
+    if (!photos) return next(new ErrorHandler("Please Add Photo ", 400));
+
+    if (photos.length < 1) return next(new ErrorHandler("Please Add atleast one Photo ", 400));
+    if (photos.length > 5) return next(new ErrorHandler("You can only upload 5 Photos ", 400));
+
     if (!name || !price || !stock || !category || !description) {
-      rm(photo.path, () => console.log("deleted"));
+      // rm(photo.path, () => console.log("deleted"));
       return next(new ErrorHandler("Please enter all fields!", 400));
     }
+
+    //upload to cloudinary
+
+    const photosUrlArr = await uploadToCloudinary(photos)
+
     await Product.create({
       name,
       price,
       stock,
       category: category.toLowerCase(),
-      photo: photo.path,
+      // photo: photo.path,
+      photos: photosUrlArr,
       description,
     });
 
@@ -122,11 +132,11 @@ export const updateProduct = TryCatch(async (req, res, next) => {
 
   if (!product) return next(new ErrorHandler("Product Not Found!", 404));
 
-  if (photo) {
-    rm(product.photo!, () => console.log("deleted old photo"));
+  // if (photo) {
+  //   rm(product.photo!, () => console.log("deleted old photo"));
 
-    product.photo = photo.path;
-  }
+  //   product.photo = photo.path;
+  // }
   console.log(name, category, stock);
   if (name) product.name = name;
   if (price) product.price = price;
@@ -153,7 +163,7 @@ export const deleteProduct = TryCatch(async (req, res, next) => {
 
   if (!product) return next(new ErrorHandler("Product Not Found!", 404));
 
-  rm(product.photo!, () => console.log("Product Photo Deleted"));
+  // rm(product.photo!, () => console.log("Product Photo Deleted"));
 
   await product.deleteOne();
   inValidateCache({
